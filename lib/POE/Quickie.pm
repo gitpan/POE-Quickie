@@ -3,7 +3,7 @@ BEGIN {
   $POE::Quickie::AUTHORITY = 'cpan:HINRIK';
 }
 BEGIN {
-  $POE::Quickie::VERSION = '0.03';
+  $POE::Quickie::VERSION = '0.04';
 }
 
 use strict;
@@ -32,10 +32,17 @@ sub new {
     $self->{parent_id} = $parent_id;
     $OBJECTS{$parent_id} = $self;
 
+    return $self;
+}
+
+sub _create_session {
+    my ($self) = @_;
+
     POE::Session->create(
         object_states => [
             $self => [qw(
                 _start
+                _stop
                 _exception
                 _create_wheel
                 _delete_wheel
@@ -54,7 +61,9 @@ sub new {
         },
     );
 
-    return $self;
+    $self->{got_session} = 1;
+
+    return;
 }
 
 sub _start {
@@ -63,6 +72,12 @@ sub _start {
     my $session_id = $session->ID;
     $self->{session_id} = $session_id;
     $kernel->sig(DIE => '_exception');
+    return;
+}
+
+sub _stop {
+    my $self = $_[OBJECT];
+    $self->{got_session} = 0;
     return;
 }
 
@@ -78,6 +93,8 @@ sub run {
     if ($args{AltFork} && $^O eq 'Win32') {
         croak 'AltFork does not currently work on Win32';
     }
+
+    $self->_create_session() if !$self->{got_session};
 
     my ($exception, $wheel)
         = $poe_kernel->call($self->{session_id}, '_create_wheel', \%args);
@@ -314,6 +331,7 @@ sub programs {
 sub _lazy_run {
     my ($self, %args) = @_;
 
+    $self->_create_session() if !$self->{got_session};
     my $parent_id = $poe_kernel->get_active_session->ID;
     $poe_kernel->refcount_increment($parent_id, __PACKAGE__);
     $poe_kernel->refcount_increment($self->{session_id}, __PACKAGE__);
@@ -543,7 +561,7 @@ to the options to L<C<run>|/run>.
 =head1 FUNCTIONS
 
 The usage of these functions is modeled after the ones provided by
-L<Capture::Tiny|Capture::Tiny>. They will now return until the executed
+L<Capture::Tiny|Capture::Tiny>. They will not return until the executed
 program has exited. However,
 L<C<run_one_timeslice>|POE::Kernel/run_one_timeslice> in POE::Kernel will be
 called in the meantime, so the rest of your application will continue to run.

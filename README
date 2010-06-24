@@ -122,7 +122,7 @@ OUTPUT
 
 FUNCTIONS
     The usage of these functions is modeled after the ones provided by
-    Capture::Tiny. They will now return until the executed program has
+    Capture::Tiny. They will not return until the executed program has
     exited. However, "run_one_timeslice" in POE::Kernel will be called in
     the meantime, so the rest of your application will continue to run.
 
