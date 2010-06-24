@@ -7,9 +7,14 @@ SYNOPSIS
      sub handler {
          my $heap = $_[HEAP];
 
+         # the really lazy interface
+         my ($stdout, $stderr, $exit) = quickie('foo.pl');
+         print $output, "\n";
+
+         # the more involved interface
          my $heap->{quickie} = POE::Quickie->new();
          $heap->{quickie}->run(
-             Program     => ['foo', 'bar'],
+             Program     => ['foo.pl', 'bar'],
              StdoutEvent => 'stdout',
              Context     => 'remember this',
          );
@@ -32,6 +37,11 @@ DESCRIPTION
     timeout, and storing process-specific context information which will be
     delivered with every event.
 
+    There is also an even lazier API which suspends the execution of your
+    event handler and gives control back to POE while your task is running,
+    the same way LWP::UserAgent::POE does. This is provided by the
+    "quickie_*" functions which you can import.
+
 METHODS
   "new"
     Constructs a POE::Quickie object. You'll want to hold on to it.
@@ -42,11 +52,15 @@ METHODS
 
   "run"
     This method starts a new program. It returns the process id of the newly
-    executed program. It takes the following arguments:
+    executed program.
+
+    You can either call it with a single argument (string, arrayref, or
+    coderef), which will used as the 'Program' argument, or you can supply
+    the following key-value pairs:
 
     'Program' (required), will be passed to POE::Wheel::Run's constructor.
 
-    'CopyINC' (optional), if true, a new instance of the active Perl
+    'AltFork' (optional), if true, a new instance of the active Perl
     interpreter ($^X) will be launched with 'Program' (which must be a
     string) as the code (*-e*) argument, and the current @INC passed as
     include (*-I*) arguments. Default is false.
@@ -62,7 +76,7 @@ METHODS
     program's STDERR. If you don't supply this, they will be printed to the
     main program's STDERR. To explicitly ignore them, set this to "undef".
 
-    'ExitEvent' (optional, the event to be called when the program has
+    'ExitEvent' (optional), the event to be called when the program has
     exited. If you don't supply this, a warning will be printed if the exit
     status is nonzero. To explicitly ignore it, set this to "undef".
 
@@ -79,9 +93,9 @@ METHODS
     verbatim to the underlying POE::Wheel::Run object's constructor.
     Possibly useful if you want to change the input/output filters and such.
 
-  "shutdown"
-    This shuts down the POE::Quickie instance. Any running jobs will be
-    killed.
+  "killall"
+    This kills all currently running programs which POE::Quickie is
+    managing.
 
   "programs"
     Returns a hash reference of all the currently running programs. The key
@@ -105,6 +119,44 @@ OUTPUT
     "ARG0": the exit code produced by the program
     "ARG1": the process id of the child process
     "ARG2": the context variable, if any
+
+FUNCTIONS
+    These usage of these functions is modeled after the ones provided by
+    Capture::Tiny, except we also give you the exit code.
+
+    The functions below will not return until the executed program has
+    exited. POE::Kernel's "run_one_timeslice" in the meantime, however, so
+    rest of your application will continue to run.
+
+    All functions take the same arguments as the "run" method, except for
+    the '*Event' and 'Context' arguments.
+
+     # these are equivalent
+     ($stdout, $stderr, $exit) = quickie('foo.pl');
+     ($stdout, $stderr, $exit) = quickie(Program => 'foo.pl');
+
+     # ditto
+     ($stdout, $stderr, $exit) = quickie([qw(foo.pl bar)]);
+     ($stdout, $stderr, $exit) = quickie(Program => qw(foo.pl bar)]);
+
+  "quickie"
+    Returns 3 values: the stdout, stderr, and exit code of the program.
+
+  "quickie_tee"
+    Returns 3 values: the stdout, stderr, and exit code of the program. In
+    addition, it will echo the stdout/stderr to your program's
+    stdout/stderr. Beware that stdout and stderr in the merged result are
+    not guaranteed to be properly ordered due to buffering.
+
+  "quickie_merged"
+    Returns 2 values: the merged stdout & stderr, and exit code of the
+    program.
+
+  "quickie_tee_merged"
+    Returns 2 values: the merged stdout & stderr, and exit code of the
+    program. In addition, it will echo the merged stdout & stderr to your
+    program's stdout. Beware that stdout and stderr in the merged result are
+    not guaranteed to be properly ordered due to buffering.
 
 AUTHOR
     Hinrik Örn Sigurðsson, hinrik.sig@gmail.com

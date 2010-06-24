@@ -14,8 +14,9 @@ t/02_success.t
 t/03_failure.t
 t/04_timeout.t
 t/05_exception.t
+t/06_lazy.t
 t/release-pod-syntax.t
-utils/developer/pre-commit
+utils/developer/git-pre-commit
 xt/perl_critic.t
 xt/perl_critic_t.t
 xt/perlcriticrc

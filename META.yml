@@ -3,6 +3,7 @@ abstract: 'A lazy way to wrap blocking programs'
 author:
   - 'Hinrik Örn Sigurðsson <hinrik.sig@gmail.com>'
 build_requires:
+  Capture::Tiny: 0
   Test::More: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.31
@@ -19,8 +20,11 @@ no_index:
     - xt
     - utils
 requires:
+  Capture::Tiny: 0.07
   Carp: 0
+  Exporter: 0
   POE: 1.289
+  POE::Session: 0
   POE::Wheel::Run: 0
   Test::More: 0.47
   perl: 5.008
@@ -29,5 +33,5 @@ resources:
   homepage: http://search.cpan.org/dist/POE-Quickie/
   license: http://dev.perl.org/licenses/
   repository: git://github.com/hinrik/poe-quickie.git
-version: 0.01
+version: 0.02
 x_authority: cpan:HINRIK
