@@ -3,7 +3,7 @@ BEGIN {
   $POE::Quickie::AUTHORITY = 'cpan:HINRIK';
 }
 BEGIN {
-  $POE::Quickie::VERSION = '0.05';
+  $POE::Quickie::VERSION = '0.06';
 }
 
 use strict;
@@ -299,18 +299,18 @@ sub _pid_to_id {
 }
 
 sub killall {
-    my ($self) = @_;
-    $poe_kernel->call($self->{session_id}, '_killall');
+    my $self = shift;
+    $poe_kernel->call($self->{session_id}, '_killall', @_);
     return;
 }
 
 sub _killall {
-    my ($kernel, $self) = @_[KERNEL, OBJECT];
+    my ($kernel, $self, $signal) = @_[KERNEL, OBJECT, ARG0];
 
     $kernel->alarm_remove_all();
 
     for my $id (keys %{ $self->{wheels}}) {
-        $self->{wheels}{$id}{obj}->kill();
+        $self->{wheels}{$id}{obj}->kill($signal);
     }
 
     return;
@@ -418,15 +418,15 @@ POE::Quickie - A lazy way to wrap blocking programs
  use POE::Quickie;
 
  sub handler {
-     my $heap = $_[HEAP];
+     my $self = $_[OBJECT];
 
      # the really lazy interface
      my ($stdout, $stderr, $exit_status) = quickie('foo.pl');
      print $stdout;
 
      # the more involved interface
-     my $heap->{quickie} = POE::Quickie->new();
-     $heap->{quickie}->run(
+     $self->{quickie} = POE::Quickie->new();
+     $self->{quickie}->run(
          Program     => ['foo.pl', 'bar'],
          StdoutEvent => 'stdout',
          Context     => 'remember this',
@@ -460,7 +460,11 @@ L<C<quickie_*>|/FUNCTIONS> functions which are exported by default.
 
 =head2 C<new>
 
-Constructs a POE::Quickie object. You'll want to hold on to it.
+Constructs a POE::Quickie object. You only need to do this if you want to
+be able to call L<C<run>|/run>, L<C<killall>|/killall>, or
+L<C<programs>|/programs>. It is also safe to let go of the object once you're
+done calling its methods. POE::Quickie will continue to run your programs
+until they finish.
 
 Takes 3 optional parameters: B<'debug'>, B<'default'>, and B<'trace'>. These
 will be passed to the object's L<POE::Session|POE::Session> constructor. See
@@ -479,8 +483,8 @@ B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
 
 B<'AltFork'> (optional), if true, a new instance of the active Perl
 interpreter (C<$^X>) will be launched with B<'Program'> (which must be a
-string) as the code (I<-e>) argument, and the current C<@INC> passed as
-include (I<-I>) arguments. Default is false.
+string) as the code argument (I<-e>), and the current C<@INC> passed as
+include arguments (I<-I>). Default is false.
 
 B<'ProgramArgs'> (optional), same as the epynomous parameter to
 POE::Wheel::Run.
@@ -510,7 +514,8 @@ useful if you want to change the input/output filters and such.
 
 =head2 C<killall>
 
-This kills all currently running programs which POE::Quickie is managing.
+This kills all programs which POE::Quickie is managing for your session.
+Takes one optional argument, a signal name. Defaults to SIGTERM.
 
 =head2 C<programs>
 
@@ -571,25 +576,26 @@ B<'*Event'> and B<'Context'> arguments.
 
 =head2 C<quickie>
 
-Returns 3 values: the stdout, stderr, and exit code of the program.
+Returns 3 values: the stdout, stderr, and exit code (C<$?>) of the program.
 
 =head2 C<quickie_tee>
 
-Returns 3 values: the stdout, stderr, and exit code of the program. In
-addition, it will echo the stdout/stderr to your program's stdout/stderr.
+Returns 3 values: the stdout, stderr, and exit code (C<$?>) of the program.
+In addition, it will echo the stdout/stderr to your program's stdout/stderr.
 Beware that stdout and stderr in the merged result are not guaranteed to be
 properly ordered due to buffering.
 
 =head2 C<quickie_merged>
 
-Returns 2 values: the merged stdout & stderr, and exit code of the program.
+Returns 2 values: the merged stdout & stderr, and exit code (C<$?>) of the
+program.
 
 =head2 C<quickie_tee_merged>
 
-Returns 2 values: the merged stdout & stderr, and exit code of the program.
-In addition, it will echo the merged stdout & stderr to your program's
-stdout. Beware that stdout and stderr in the merged result are not guaranteed
-to be properly ordered due to buffering.
+Returns 2 values: the merged stdout & stderr, and exit code (C<$?>) of the
+program. In addition, it will echo the merged stdout & stderr to your
+program's stdout. Beware that stdout and stderr in the merged result are not
+guaranteed to be properly ordered due to buffering.
 
 =head1 AUTHOR
 

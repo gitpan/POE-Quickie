@@ -5,15 +5,15 @@ SYNOPSIS
      use POE::Quickie;
 
      sub handler {
-         my $heap = $_[HEAP];
+         my $self = $_[OBJECT];
 
          # the really lazy interface
          my ($stdout, $stderr, $exit_status) = quickie('foo.pl');
          print $stdout;
 
          # the more involved interface
-         my $heap->{quickie} = POE::Quickie->new();
-         $heap->{quickie}->run(
+         $self->{quickie} = POE::Quickie->new();
+         $self->{quickie}->run(
              Program     => ['foo.pl', 'bar'],
              StdoutEvent => 'stdout',
              Context     => 'remember this',
@@ -44,7 +44,10 @@ DESCRIPTION
 
 METHODS
   "new"
-    Constructs a POE::Quickie object. You'll want to hold on to it.
+    Constructs a POE::Quickie object. You only need to do this if you want
+    to be able to call "run", "killall", or "programs". It is also safe to
+    let go of the object once you're done calling its methods. POE::Quickie
+    will continue to run your programs until they finish.
 
     Takes 3 optional parameters: 'debug', 'default', and 'trace'. These will
     be passed to the object's POE::Session constructor. See its
@@ -62,8 +65,8 @@ METHODS
 
     'AltFork' (optional), if true, a new instance of the active Perl
     interpreter ($^X) will be launched with 'Program' (which must be a
-    string) as the code (*-e*) argument, and the current @INC passed as
-    include (*-I*) arguments. Default is false.
+    string) as the code argument (*-e*), and the current @INC passed as
+    include arguments (*-I*). Default is false.
 
     'ProgramArgs' (optional), same as the epynomous parameter to
     POE::Wheel::Run.
@@ -94,8 +97,8 @@ METHODS
     Possibly useful if you want to change the input/output filters and such.
 
   "killall"
-    This kills all currently running programs which POE::Quickie is
-    managing.
+    This kills all programs which POE::Quickie is managing for your session.
+    Takes one optional argument, a signal name. Defaults to SIGTERM.
 
   "programs"
     Returns a hash reference of all the currently running programs. The key
@@ -130,20 +133,20 @@ FUNCTIONS
     '*Event' and 'Context' arguments.
 
   "quickie"
-    Returns 3 values: the stdout, stderr, and exit code of the program.
+    Returns 3 values: the stdout, stderr, and exit code ($?) of the program.
 
   "quickie_tee"
-    Returns 3 values: the stdout, stderr, and exit code of the program. In
-    addition, it will echo the stdout/stderr to your program's
+    Returns 3 values: the stdout, stderr, and exit code ($?) of the program.
+    In addition, it will echo the stdout/stderr to your program's
     stdout/stderr. Beware that stdout and stderr in the merged result are
     not guaranteed to be properly ordered due to buffering.
 
   "quickie_merged"
-    Returns 2 values: the merged stdout & stderr, and exit code of the
+    Returns 2 values: the merged stdout & stderr, and exit code ($?) of the
     program.
 
   "quickie_tee_merged"
-    Returns 2 values: the merged stdout & stderr, and exit code of the
+    Returns 2 values: the merged stdout & stderr, and exit code ($?) of the
     program. In addition, it will echo the merged stdout & stderr to your
     program's stdout. Beware that stdout and stderr in the merged result are
     not guaranteed to be properly ordered due to buffering.
