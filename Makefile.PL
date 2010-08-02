@@ -24,10 +24,11 @@ my %WriteMakefileArgs = (
   'NAME' => 'POE::Quickie',
   'PREREQ_PM' => {
     'POE' => '1.289',
+    'POE::Filter::Stream' => '0',
     'POE::Session' => '0',
     'POE::Wheel::Run' => '0'
   },
-  'VERSION' => '0.08',
+  'VERSION' => '0.09',
   'test' => {
     'TESTS' => 't/*.t'
   }

@@ -35,6 +35,7 @@
       "runtime" : {
          "requires" : {
             "POE" : "1.289",
+            "POE::Filter::Stream" : 0,
             "POE::Session" : 0,
             "POE::Wheel::Run" : 0,
             "perl" : "5.008"
@@ -57,7 +58,7 @@
          "web" : "http://github.com/hinrik/poe-quickie"
       }
    },
-   "version" : "0.08",
+   "version" : "0.09",
    "x_authority" : "cpan:HINRIK"
 }
 
