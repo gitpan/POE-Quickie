@@ -3,11 +3,11 @@ BEGIN {
   $POE::Quickie::AUTHORITY = 'cpan:HINRIK';
 }
 BEGIN {
-  $POE::Quickie::VERSION = '0.09';
+  $POE::Quickie::VERSION = '0.10';
 }
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 use Carp 'croak';
 use POE;
 use POE::Filter::Stream;

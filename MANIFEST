@@ -17,11 +17,3 @@ t/05_exception.t
 t/06_lazy.t
 t/07_session_rebirth.t
 t/08_input.t
-t/release-pod-syntax.t
-utils/developer/git-pre-commit
-xt/perl_critic.t
-xt/perl_critic_t.t
-xt/perlcriticrc
-xt/perlcriticrc_t
-xt/pod.t
-xt/pod_coverage.t
