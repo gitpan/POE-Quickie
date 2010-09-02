@@ -28,7 +28,7 @@ my %WriteMakefileArgs = (
     'POE::Session' => '0',
     'POE::Wheel::Run' => '0'
   },
-  'VERSION' => '0.10',
+  'VERSION' => '0.11',
   'test' => {
     'TESTS' => 't/*.t'
   }
