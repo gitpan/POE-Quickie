@@ -3,7 +3,7 @@ BEGIN {
   $POE::Quickie::AUTHORITY = 'cpan:HINRIK';
 }
 BEGIN {
-  $POE::Quickie::VERSION = '0.11';
+  $POE::Quickie::VERSION = '0.12';
 }
 
 use strict;
@@ -162,7 +162,7 @@ sub _create_wheel {
 sub _exception {
     my ($kernel, $self, $ex) = @_[KERNEL, OBJECT, ARG1];
     chomp $ex->{error_str};
-    warn "Event $ex->{event} in session "
+    warn __PACKAGE__.": Event $ex->{event} in session "
         .$ex->{dest_session}->ID." raised exception:\n  $ex->{error_str}\n";
     $kernel->sig_handled();
     return;
@@ -177,7 +177,7 @@ sub _child_signal {
 
     my $s = $status >> 8;
     if ($s != 0 && !exists $self->{wheels}{$id}{args}{ExitEvent}) {
-        warn "Child $pid exited with status $s\n";
+        warn "Child $pid exited with nonzero status $s\n";
     }
 
     my $event   = $self->{wheels}{$id}{args}{ExitEvent};
@@ -310,7 +310,7 @@ sub _killall {
     return;
 }
 
-sub programs {
+sub processes {
     my ($self) = @_;
     $self = POE::Quickie->new() if ref $self ne 'POE::Quickie';
 
@@ -406,21 +406,19 @@ sub quickie_tee_merged {
 
 =head1 NAME
 
-POE::Quickie - A lazy way to wrap blocking programs
+POE::Quickie - A lazy way to wrap blocking code and programs
 
 =head1 SYNOPSIS
 
  use POE::Quickie;
 
- sub handler {
-     my $self = $_[OBJECT];
-
+ sub event_handler {
      # the really lazy interface
      my ($stdout, $stderr, $exit_status) = quickie('foo.pl');
      print $stdout;
 
      # the more involved interface
-     POE::Quickie->run(
+     my $pid = POE::Quickie->run(
          Program     => ['foo.pl', 'bar'],
          StdoutEvent => 'stdout',
          Context     => 'remember this',
@@ -456,10 +454,10 @@ L<C<quickie_*>|/FUNCTIONS> functions which are exported by default.
 
 Constructs a POE::Quickie object. You only need to do this if you want to
 specify any of the parameters below, since a POE::Quickie object will be
-constructed automatically whenever it is needed. The rest of the methods can
+constructed automatically when it is needed. The rest of the methods can
 be called on the object (C<< $object->run() >>) or as class methods
 (C<< POE::Quickie->run() >>). You can safely let the object go out of scope;
-POE::Quickie will continue to run your programs until they finish.
+POE::Quickie will continue to run your processes until they finish.
 
 Takes 3 optional parameters: B<'debug'>, B<'default'>, and B<'trace'>. These
 will be passed to the object's L<POE::Session|POE::Session> constructor. See
@@ -467,14 +465,43 @@ its documentation for details.
 
 =head2 C<run>
 
-This method starts a new program. It returns the process id of the newly
-executed program.
+This method spawns a new child process. It returns its process id.
 
 You can either call it with a single argument (string, arrayref, or coderef),
 which will used as the B<'Program'> argument, or you can supply the following
 key-value pairs:
 
-B<'Program'> (required), will be passed to POE::Wheel::Run's constructor.
+B<'Program'> (required), will be passed to directly to
+L<POE::Wheel::Run|POE::Wheel::Run/new>'s constructor.
+
+B<'ProgramArgs'> (optional), will be passed directly to
+L<POE::Wheel::Run|POE::Wheel::Run/new>'s constructor.
+
+B<'Input'> (optional), a string containing the input to the process. This
+string, if provided, will be sent immediately to the child, and its stdin
+will then be shut down. B<Note:> no processing will be done on the data
+before it is sent. For instance, if you are executing a program which expects
+line-based input, be sure to end your input with a newline.
+
+B<'StdoutEvent'> (optional), the event for delivering lines from the
+process' STDOUT. If you don't supply this, they will be printed to the main
+process's STDOUT. To explicitly ignore them, set this to C<undef>.
+
+B<'StderrEvent'> (optional), the event for delivering lines from the
+process' STDERR. If you don't supply this, they will be printed to the main
+process' STDERR. To explicitly ignore them, set this to C<undef>.
+
+B<'ExitEvent'> (optional), the event to be called when the process has exited.
+If you don't supply this, a warning indicating the exit code will be printed
+if it is nonzero. To explicitly ignore it, set this to C<undef>.
+
+B<'Context'> (optional), a variable which will be sent back to you with every
+event. If you pass a reference, that same reference will be delivered back
+to you later (not a copy), so you can update it as you see fit.
+
+B<'Timeout'> (optional), a timeout in seconds after which the process will
+be forcibly L<killed|POE::Wheel::Run/kill> if it is still running. There is
+no timeout by default.
 
 B<'AltFork'> (optional), if true, a new instance of the active Perl
 interpreter (L<C<$^X>|perlvar>) will be launched with B<'Program'> (which
@@ -482,46 +509,19 @@ must be a string) as the code argument (L<I<-e>|perlrun>), and the current
 L<C<@INC>|perlvar> passed as include arguments (L<I<-I>|perlrun>). Default
 is false.
 
-B<'ProgramArgs'> (optional), same as the epynomous parameter to
-POE::Wheel::Run.
-
-B<'Input'> (optional), a string containing the input to the program. This
-string, if provided, will be sent immediately to the program, and its
-stdin will then be shut down. Note: no processing will be done on the data
-before it is sent, so make sure you include newlines where needed if the
-program requires them.
-
-B<'StdoutEvent'> (optional), the event for delivering lines from the
-program's STDOUT. If you don't supply this, they will be printed to the main
-program's STDOUT. To explicitly ignore them, set this to C<undef>.
-
-B<'StderrEvent'> (optional), the event for delivering lines from the
-program's STDERR. If you don't supply this, they will be printed to the main
-program's STDERR. To explicitly ignore them, set this to C<undef>.
-
-B<'ExitEvent'> (optional), the event to be called when the program has exited.
-If you don't supply this, a warning will be printed if the exit status is
-nonzero. To explicitly ignore it, set this to C<undef>.
-
-B<'Timeout'> (optional), a timeout in seconds after which the program will
-be forcibly killed if it is still running. There is no timeout by default.
-
-B<'Context'> (optional), a variable which will be sent back to you with every
-event. If you pass a reference, that same reference will be delivered back
-to you later (not a copy), so you can update it as you see fit.
-
 B<'WheelArgs'> (optional), a hash reference of options which will be passed
 verbatim to the underlying POE::Wheel::Run object's constructor. Possibly
 useful if you want to change the input/output filters and such.
 
 =head2 C<killall>
 
-This kills all programs which POE::Quickie is managing for your session.
-Takes one optional argument, a signal name. Defaults to SIGTERM.
+This L<kills|POE::Wheel::Run/kill> all processes which POE::Quickie is
+managing for your session. Takes one optional argument, a signal name (e.g.
+B<'SIGTERM'>).
 
-=head2 C<programs>
+=head2 C<processes>
 
-Returns a hash reference of all the currently running programs. The key
+Returns a hash reference of all the currently running processes. The key
 is the process id, and the value is the context variable, if any.
 
 =head1 OUTPUT
@@ -533,7 +533,7 @@ to the options to L<C<run>|/run>.
 
 =over 4
 
-=item C<ARG0>: the chunk of STDOUT generated by the program
+=item C<ARG0>: the chunk of STDOUT generated by the process
 
 =item C<ARG1>: the process id of the child process
 
@@ -545,7 +545,7 @@ to the options to L<C<run>|/run>.
 
 =over 4
 
-=item C<ARG0>: the chunk of STDERR generated by the program
+=item C<ARG0>: the chunk of STDERR generated by the process
 
 =item C<ARG1>: the process id of the child process
 
@@ -557,7 +557,7 @@ to the options to L<C<run>|/run>.
 
 =over 4
 
-=item C<ARG0>: the exit code produced by the program
+=item C<ARG0>: the exit code (L<C<$?>|perlvar>) of the child process
 
 =item C<ARG1>: the process id of the child process
 
@@ -569,7 +569,7 @@ to the options to L<C<run>|/run>.
 
 The usage of these functions is modeled after the ones provided by
 L<Capture::Tiny|Capture::Tiny>. They will not return until the executed
-program has exited. However,
+process has exited. However,
 L<C<run_one_timeslice>|POE::Kernel/run_one_timeslice> in POE::Kernel will be
 called in the meantime, so the rest of your application will continue to run.
 
@@ -579,26 +579,26 @@ B<'*Event'> and B<'Context'> arguments.
 =head2 C<quickie>
 
 Returns 3 values: the stdout, stderr, and exit code (L<C<$?>|perlvar>) of the
-program.
+child process.
 
 =head2 C<quickie_tee>
 
 Returns 3 values: the stdout, stderr, and exit code (L<C<$?>|perlvar>) of the
-program. In addition, it will echo the stdout/stderr to your program's
+child process. In addition, it will echo the stdout/stderr to your process'
 stdout/stderr. Beware that stdout and stderr in the merged result are not
 guaranteed to be properly ordered due to buffering.
 
 =head2 C<quickie_merged>
 
 Returns 2 values: the merged stdout & stderr, and exit code (L<C<$?>|perlvar>)
-of the program.
+of the child process.
 
 =head2 C<quickie_tee_merged>
 
 Returns 2 values: the merged stdout & stderr, and exit code (L<C<$?>|perlvar>)
-of the program. In addition, it will echo the merged stdout & stderr to your
-program's stdout. Beware that stdout and stderr in the merged result are not
-guaranteed to be properly ordered due to buffering.
+of the child process. In addition, it will echo the merged stdout & stderr to
+your process' stdout. Beware that stdout and stderr in the merged result are
+not guaranteed to be properly ordered due to buffering.
 
 =head1 AUTHOR
 

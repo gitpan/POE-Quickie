@@ -1,5 +1,5 @@
 {
-   "abstract" : "A lazy way to wrap blocking programs",
+   "abstract" : "A lazy way to wrap blocking code and programs",
    "author" : [
       "Hinrik \u00c3\u0096rn Sigur\u00c3\u00b0sson <hinrik.sig@gmail.com>"
    ],
@@ -34,7 +34,7 @@
       },
       "runtime" : {
          "requires" : {
-            "POE" : "1.289",
+            "POE" : "1.291",
             "POE::Filter::Stream" : 0,
             "POE::Session" : 0,
             "POE::Wheel::Run" : 0,
@@ -58,7 +58,7 @@
          "web" : "http://github.com/hinrik/poe-quickie"
       }
    },
-   "version" : "0.11",
+   "version" : "0.12",
    "x_authority" : "cpan:HINRIK"
 }
 

@@ -9,7 +9,7 @@ use ExtUtils::MakeMaker 6.31;
 
 
 my %WriteMakefileArgs = (
-  'ABSTRACT' => 'A lazy way to wrap blocking programs',
+  'ABSTRACT' => 'A lazy way to wrap blocking code and programs',
   'AUTHOR' => 'Hinrik Örn Sigurðsson <hinrik.sig@gmail.com>',
   'BUILD_REQUIRES' => {
     'Capture::Tiny' => '0.07',
@@ -23,12 +23,12 @@ my %WriteMakefileArgs = (
   'LICENSE' => 'perl',
   'NAME' => 'POE::Quickie',
   'PREREQ_PM' => {
-    'POE' => '1.289',
+    'POE' => '1.291',
     'POE::Filter::Stream' => '0',
     'POE::Session' => '0',
     'POE::Wheel::Run' => '0'
   },
-  'VERSION' => '0.11',
+  'VERSION' => '0.12',
   'test' => {
     'TESTS' => 't/*.t'
   }
