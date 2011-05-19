@@ -2,7 +2,8 @@ use strict;
 use warnings FATAL => 'all';
 use POE;
 use POE::Quickie;
-use Test::More tests => 10;
+use Test::More tests => 8;
+use Test::Deep;
 use Capture::Tiny qw(capture);
 
 POE::Session->create(
@@ -20,14 +21,14 @@ sub _start {
 
     my $before = time;
     my ($stdout, $stderr, $status) = quickie(sub { sleep 3; print "foo\n" });
-    is(($status >> 8), 0, 'Correct exit status');
-    is($stdout, "foo\n", 'Got stdout');
     my $after = time;
+    is(($status >> 8), 0, 'Correct exit status');
+    is_deeply($stdout, ['foo'], 'Got stdout');
     cmp_ok($after - $before, '>=', 2, 'The program runs');
 
     my ($merged) = quickie_merged(sub { warn "foo\n"; print "bar\n" });
-    like($merged, qr/foo\n/m, 'Got merged output');
-    like($merged, qr/bar\n/m, 'Got merged output');
+    ok(eq_deeply($merged, [qw(foo bar)]) || eq_deeply($merged, [qw(bar foo)]),
+        'Got merged output');
 
     ($stdout, $stderr) = capture {
         quickie_tee(sub { print "stdout\n"; warn "stderr\n"});
@@ -41,7 +42,7 @@ sub _start {
         quickie_tee_merged(sub { warn "stderr\n"; print "stdout\n" });
     };
 
-    like($stdout, qr/stderr\n/m, 'Got tee merged stdout');
-    like($stdout, qr/stdout\n/m, 'Got tee merged stdout');
+    ok($stdout eq "stderr\nstdout\n" || $stdout eq "stdout\nstderr\n",
+        'Got tee merged stdout');
     is($stderr, '', 'Got tee merged stderr');
 }
