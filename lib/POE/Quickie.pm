@@ -3,7 +3,7 @@ BEGIN {
   $POE::Quickie::AUTHORITY = 'cpan:HINRIK';
 }
 BEGIN {
-  $POE::Quickie::VERSION = '0.16';
+  $POE::Quickie::VERSION = '0.17';
 }
 
 use strict;

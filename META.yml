@@ -31,5 +31,5 @@ resources:
   homepage: http://search.cpan.org/dist/POE-Quickie/
   license: http://dev.perl.org/licenses/
   repository: git://github.com/hinrik/poe-quickie.git
-version: 0.16
+version: 0.17
 x_authority: cpan:HINRIK
