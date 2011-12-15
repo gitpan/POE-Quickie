@@ -35,7 +35,7 @@
       },
       "runtime" : {
          "requires" : {
-            "POE" : "1.291",
+            "POE" : "1.350",
             "POE::Filter::Stream" : 0,
             "POE::Session" : 0,
             "POE::Wheel::Run" : 0,
@@ -49,7 +49,7 @@
          "mailto" : "bug-POE-Quickie@rt.cpan.org",
          "web" : "https://rt.cpan.org/Public/Dist/Display.html?Name=POE-Quickie"
       },
-      "homepage" : "http://search.cpan.org/dist/POE-Quickie/",
+      "homepage" : "http://metacpan.org/release/POE-Quickie",
       "license" : [
          "http://dev.perl.org/licenses/"
       ],
@@ -59,7 +59,7 @@
          "web" : "http://github.com/hinrik/poe-quickie"
       }
    },
-   "version" : "0.17",
+   "version" : "0.18",
    "x_authority" : "cpan:HINRIK"
 }
 

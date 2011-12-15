@@ -24,12 +24,12 @@ my %WriteMakefileArgs = (
   'LICENSE' => 'perl',
   'NAME' => 'POE::Quickie',
   'PREREQ_PM' => {
-    'POE' => '1.291',
+    'POE' => '1.350',
     'POE::Filter::Stream' => '0',
     'POE::Session' => '0',
     'POE::Wheel::Run' => '0'
   },
-  'VERSION' => '0.17',
+  'VERSION' => '0.18',
   'test' => {
     'TESTS' => 't/*.t'
   }

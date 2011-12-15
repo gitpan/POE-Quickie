@@ -3,7 +3,7 @@ BEGIN {
   $POE::Quickie::AUTHORITY = 'cpan:HINRIK';
 }
 BEGIN {
-  $POE::Quickie::VERSION = '0.17';
+  $POE::Quickie::VERSION = '0.18';
 }
 
 use strict;
@@ -436,18 +436,21 @@ POE::Quickie - A lazy way to wrap blocking code and programs
  use POE::Quickie;
 
  sub event_handler {
-     # the really lazy interface, which will block
+     # the "I'll wait until it's finished" approach, which will block your
+     # session until the command has finished
      my ($stdout, $stderr, $exit_status) = quickie('foo.pl');
      print $stdout;
 
-     # the more involved interface
+     # the "keep me posted" approach, which will give you each line of output
+     # as it is appears
      quickie_run(
          Program     => ['foo.pl', 'bar'],
          StdoutEvent => 'stdout',
          Context     => 'remember this',
      );
 
-     # a combination of the two approaches
+     # the "get back to me when it's done" approach, which will notify you
+     # of the entire output when the command has finished
      quickie_run(
          Program     => ['foo.pl', 'bar'],
          Context     => 'remember this',
@@ -455,13 +458,11 @@ POE::Quickie - A lazy way to wrap blocking code and programs
      );
  }
 
- # this will get called once for every output line
  sub stdout {
      my ($output, $context) = @_[ARG0, ARG1];
      print "got output: '$output' in the context of '$context'\n";
  }
 
- # only called when the task is finished
  sub result {
      my ($pid, $stdout, $stderr, $merged, $status, $context) = @_[ARG0..$#_];
      print "got all this output in the context of '$context':\n";
@@ -678,7 +679,7 @@ Hinrik E<Ouml>rn SigurE<eth>sson, hinrik.sig@gmail.com
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 Hinrik E<Ouml>rn SigurE<eth>sson
+Copyright 2010-2011 Hinrik E<Ouml>rn SigurE<eth>sson
 
 This program is free software, you can redistribute it and/or modify
 it under the same terms as Perl itself.
